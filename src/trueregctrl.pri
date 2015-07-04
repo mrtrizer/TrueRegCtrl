@@ -1,0 +1,5 @@
+INCLUDEPATH  += $$PWD
+
+DEFINES +=EMULATOR
+
+HEADERS += $$PWD/imemctrl.h
