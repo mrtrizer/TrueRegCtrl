@@ -11,8 +11,10 @@ TEMPLATE = app
 
 include("../src/trueregctrl.pri")
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    dynamicmemctrl.cpp
 
-HEADERS  +=
+HEADERS  += \
+    dynamicmemctrl.h
 
 FORMS    +=
