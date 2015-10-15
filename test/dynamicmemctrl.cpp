@@ -12,6 +12,7 @@ DynamicMemCtrl::~DynamicMemCtrl()
 
 void DynamicMemCtrl::setValue(unsigned int n, unsigned int value)
 {
+    (void)n;
     this->value = value;
 }
 

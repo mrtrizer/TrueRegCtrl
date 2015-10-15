@@ -7,11 +7,12 @@
 #include <vector>
 #include <assert.h>
 
-class Register
+template <typename Param, typename ParamType>
+class RegisterT
 {
 public:
     enum Flag {R = 1, W = 2, RW = 3};
-    Register(uint32_t addr, IMemCtrl * target, uint32_t targetAddr, uint32_t flags = R|W):
+    RegisterT(uint32_t addr, IMemCtrlT<Param, ParamType> * target, uint32_t targetAddr, uint32_t flags = R|W):
         addr(addr),
         target(target),
         targetAddr(targetAddr),
@@ -23,18 +24,34 @@ public:
     inline uint32_t getAddr(){return addr;}
 private:
     uint32_t addr;
-    IMemCtrl * target;
+    IMemCtrlT<Param, ParamType> * target;
     uint32_t targetAddr;
     unsigned char flags;
 };
 
-class ProxyMemCtrl : public IMemCtrl
+template <typename Param, typename ParamType>
+class ProxyMemCtrlT : public IMemCtrlT<Param, ParamType>
 {
 public:
-    ProxyMemCtrl();
-    ~ProxyMemCtrl();
-    void setValue(unsigned int n, unsigned int value);
-    unsigned int getValue(unsigned int n);
+    typedef RegisterT<Param, ParamType> Register;
+
+    ProxyMemCtrlT(){}
+    ~ProxyMemCtrlT(){}
+    void setValue(Param n, ParamType value)
+    {
+        for (typename RegList::iterator i = regList.begin(); i != regList.end(); i++)
+            if ((i->getAddr() == n) && (i->isEnable(Register::W)))
+                i->setValueU(value);
+    }
+    unsigned int getValue(Param n)
+    {
+        for (typename RegList::iterator i = regList.begin(); i != regList.end(); i++)
+            if ((i->getAddr() == n) && (i->isEnable(Register::R)))
+            {
+                return i->getValueU();
+            }
+        assert(false);
+    }
     inline void addReg(Register reg){regList.push_back(reg);}
 private:
     typedef std::vector<Register> RegList;
