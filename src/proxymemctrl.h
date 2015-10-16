@@ -7,37 +7,92 @@
 #include <vector>
 #include <assert.h>
 
-class Register
+template <typename Param, typename ParamType>
+class AbstractRegiserT
 {
 public:
     enum Flag {R = 1, W = 2, RW = 3};
-    Register(uint32_t addr, IMemCtrl * target, uint32_t targetAddr, uint32_t flags = R|W):
+    AbstractRegiserT(Param addr, uint32_t flags = R|W):
         addr(addr),
-        target(target),
-        targetAddr(targetAddr),
         flags(flags)
     {}
-    inline void setValueU(uint32_t value){assert(flags & W); target->setValue(targetAddr,value);}
-    inline uint32_t getValueU(){assert(flags & R); return target->getValue(targetAddr);}
-    inline bool isEnable(Flag flag){return flags & flag;}
-    inline uint32_t getAddr(){return addr;}
-private:
-    uint32_t addr;
-    IMemCtrl * target;
-    uint32_t targetAddr;
+    virtual ~AbstractRegiserT()
+    {}
+    virtual AbstractRegiserT<Param, ParamType> * getClone() const = 0;
+    virtual void setValue(ParamType value) = 0;
+    virtual void setValueU(uint32_t value) = 0;
+    virtual uint32_t getValueU() const = 0;
+    inline bool isEnable(Flag flag) const {return flags & flag;}
+    inline uint32_t getAddr() const {return addr;}
+protected:
+    Param addr;
     unsigned char flags;
 };
 
-class ProxyMemCtrl : public IMemCtrl
+template <typename Param, typename TargetParam, typename ParamType>
+class RegisterT: public AbstractRegiserT<Param, ParamType>
 {
 public:
-    ProxyMemCtrl();
-    ~ProxyMemCtrl();
-    void setValue(unsigned int n, unsigned int value);
-    unsigned int getValue(unsigned int n);
-    inline void addReg(Register reg){regList.push_back(reg);}
+    enum Flag {R = 1, W = 2, RW = 3};
+    RegisterT(Param addr, IMemCtrlT<TargetParam, ParamType> * target, TargetParam targetAddr, uint32_t flags = R|W):
+        AbstractRegiserT<Param, ParamType>(addr, flags),
+        target(target),
+        targetAddr(targetAddr)
+    {}
+    AbstractRegiserT<Param, ParamType> * getClone() const
+    {
+        return new RegisterT<Param, TargetParam, ParamType>(*this);
+    }
+    void setValue(ParamType value)
+    {
+        assert(this->flags & W);
+        target->setValue(targetAddr, value);
+    }
+    void setValueU(uint32_t value)
+    {
+        assert(this->flags & W);
+        target->setValue(targetAddr,value);
+    }
+    uint32_t getValueU() const
+    {
+        assert(this->flags & R);
+        return target->getValue(targetAddr);
+    }
 private:
-    typedef std::vector<Register> RegList;
+    IMemCtrlT<TargetParam, ParamType> * target;
+    TargetParam targetAddr;
+};
+
+template <typename Param, typename ParamType>
+class ProxyMemCtrlT : public IMemCtrlT<Param, ParamType>
+{
+public:
+    typedef AbstractRegiserT<Param, ParamType> AbstractRegister;
+
+    ProxyMemCtrlT(){}
+    ~ProxyMemCtrlT()
+    {
+        for (typename RegList::iterator i = regList.begin(); i != regList.end(); i++)
+            delete *i;
+    }
+    void setValue(Param n, ParamType value)
+    {
+        for (typename RegList::iterator i = regList.begin(); i != regList.end(); i++)
+            if (((*i)->getAddr() == n) && ((*i)->isEnable(AbstractRegister::W)))
+                (*i)->setValueU(value);
+    }
+    unsigned int getValue(Param n)
+    {
+        for (typename RegList::iterator i = regList.begin(); i != regList.end(); i++)
+            if (((*i)->getAddr() == n) && ((*i)->isEnable(AbstractRegister::R)))
+            {
+                return (*i)->getValueU();
+            }
+        assert(false);
+    }
+    inline void addReg(const AbstractRegister & reg){regList.push_back(reg.getClone());}
+private:
+    typedef std::vector<AbstractRegister *> RegList;
     RegList regList;
 };
 

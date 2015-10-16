@@ -3,12 +3,13 @@
 
 #include <inttypes.h>
 
-class IMemCtrl
+template <typename Param, typename ParamType>
+class IMemCtrlT
 {
 public:
-    virtual ~IMemCtrl(){}
-    virtual void setValue(unsigned int n, unsigned int value) = 0;
-    virtual unsigned int getValue(unsigned int n) = 0;
+    virtual ~IMemCtrlT(){}
+    virtual void setValue(Param n, ParamType value) = 0;
+    virtual unsigned int getValue(Param n) = 0;
 };
 
 #endif // IMEMCTRL_H

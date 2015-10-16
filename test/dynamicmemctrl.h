@@ -3,7 +3,7 @@
 
 #include "imemctrl.h"
 
-class DynamicMemCtrl : public IMemCtrl
+class DynamicMemCtrl : public IMemCtrlT<unsigned int, unsigned int>
 {
 public:
     DynamicMemCtrl();
