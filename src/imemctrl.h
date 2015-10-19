@@ -3,6 +3,8 @@
 
 #include <inttypes.h>
 
+#define NOT_DEFINED (static_cast<unsigned int>(0xFFFFFFF))
+
 template <typename Param, typename ParamType>
 class IMemCtrlT
 {
