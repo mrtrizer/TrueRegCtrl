@@ -12,6 +12,12 @@ public:
     virtual ~IMemCtrlT(){}
     virtual void setValue(Param n, ParamType value) = 0;
     virtual unsigned int getValue(Param n) = 0;
+    virtual bool setValueUnbuff(Param n, ParamType value)
+    {
+        setValue(n,value);
+        return true;
+    }
+    virtual void updateValue(Param n) {(void)n;}
 };
 
 #endif // IMEMCTRL_H

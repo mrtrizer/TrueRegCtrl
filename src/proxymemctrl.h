@@ -11,7 +11,7 @@ template <typename Param, typename ParamType>
 class AbstractRegiserT
 {
 public:
-    enum Flag {R = 1, W = 2, RW = 3};
+    enum Flag {R = 1, W = 2, RW = 3, UNBUFF = 4};
     AbstractRegiserT(Param addr, uint32_t flags = R|W):
         addr(addr),
         flags(flags)
@@ -33,8 +33,8 @@ template <typename Param, typename TargetParam, typename ParamType>
 class RegisterT: public AbstractRegiserT<Param, ParamType>
 {
 public:
-    enum Flag {R = 1, W = 2, RW = 3};
-    RegisterT(Param addr, IMemCtrlT<TargetParam, ParamType> * target, TargetParam targetAddr, uint32_t flags = R|W):
+    typedef AbstractRegiserT<Param, ParamType> AbstractRegister;
+    RegisterT(Param addr, IMemCtrlT<TargetParam, ParamType> * target, TargetParam targetAddr, uint32_t flags = AbstractRegister::RW):
         AbstractRegiserT<Param, ParamType>(addr, flags),
         target(target),
         targetAddr(targetAddr)
@@ -45,17 +45,20 @@ public:
     }
     void setValue(ParamType value)
     {
-        assert(this->flags & W);
-        target->setValue(targetAddr, value);
+        assert(this->flags & AbstractRegister::W);
+        if (this->flags & AbstractRegister::UNBUFF)
+            target->setValueUnbuff(targetAddr,value);
+        else
+            target->setValue(targetAddr, value);
     }
     void setValueU(uint32_t value)
     {
-        assert(this->flags & W);
-        target->setValue(targetAddr,value);
+        assert(this->flags & AbstractRegister::W);
+        setValue(value);
     }
     uint32_t getValueU() const
     {
-        assert(this->flags & R);
+        assert(this->flags & AbstractRegister::R);
         return target->getValue(targetAddr);
     }
 private:
