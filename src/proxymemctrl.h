@@ -84,9 +84,9 @@ public:
             if (((*i)->getAddr() == n) && ((*i)->isEnable(AbstractRegister::W)))
                 (*i)->setValueU(value);
     }
-    unsigned int getValue(Param n)
+    unsigned int getValue(Param n) const
     {
-        for (typename RegList::iterator i = regList.begin(); i != regList.end(); i++)
+        for (typename RegList::const_iterator i = regList.begin(); i != regList.end(); i++)
             if (((*i)->getAddr() == n) && ((*i)->isEnable(AbstractRegister::R)))
             {
                 return (*i)->getValueU();
